@@ -1,0 +1,1 @@
+/data/home/siretag/RNAseq/results/mapped/sorted/HS1.bam,/data/home/siretag/RNAseq/results/mapped/sorted/HS2.bam

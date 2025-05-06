@@ -1,0 +1,185 @@
+### General parameters ###
+
+# Path to the directory with raw data in an 'RNAseq/fastq/' folder if they are fastq files,
+# or a 'RNAseq/bam/' folder if they are bam files (compressed from fastq)
+WORKING_DIR: "/data/home/siretag/"
+
+# Path to the output directory, where all output files will be placed in an 'RNAseq/results/' folder
+# This can be the same as the above if you wish to have the outputs with the inputs
+OUTPUT_DIR : "/data/home/siretag/"
+
+# Is input already mapped bam (not fastq compressed as bam, which also happens)? If True, DEA and DAS are available, but DTU requires fastq for salmon quantification
+input_mapped: "no"
+# Paired end ? Enter 'yes' if so, 'no' if not.
+paired_end: "no"
+# stranded ? Enter 'yes' if normal stranded, 'no' if not stranded, or 'rev' if reverse stranded
+stranded: "no"
+
+# Reference genome & annotation
+genome_and_annotation:
+  # Name of the folder in which the reference genom / annotation can be found
+  refgen_folder: "refgen"
+  # file used as reference genome (.fasta / .fa / .fna file)
+  genome: "TAIR10_chr_all.fas"
+  # base for reference genome index file names (refgen.1.ht2, refgen.2.ht2), can be changed to araport, TAIR, COL_CEN, etc.,
+  # if an indexation exists for one of the two mapping tools but you wish to use another one, make sure to name this differently for the new indexation
+  reference_index: "TAIR"
+  # file used as genome annotation (.gtf preferably, can be compressed in .gz)
+  annotation: "Araport11_GTF_genes_transposons.20240331.gtf"
+  # ID type to use in the annotation file (gene_id, ID...)
+  id_type: "gene_id"
+  # feature type to use for read counting in featureCounts / htseq-count
+  # multiple features can be used if the quantification tool chosen is featurecounts. Simply add a comma between feature types, for example : "exon,transposable_element"
+  feature: "gene,transposable_element"
+  # file used as reference transcriptome (.fasta / .fa / .fna file) -- if not using DTU step, this is not necessary (leave blank)
+  transcriptome: "TAIR10_transcriptome.fa"
+  # base for reference transcriptome index file names, can be changed to araport, TAIR, COL_CEN, etc.
+  reference_index_transcriptome: "TAIR_transc"
+
+# Should quality control be done on raw reads ? Options are : 'yes' & 'no'
+do_rawqc: "yes"
+# Should trimming be done ? Options are : 'yes' & 'no'
+do_trimming: "yes"
+
+# minimum read length accepted (use the multiqc report on the first qc step to see what lengths of reads are found)
+min_read_length: 80
+# accepted phred score (same as above, use the qc results via multiqc report)
+min_phred_score: 30
+
+### DEA-specific parameters
+DEA:
+  do_DEA: "yes"
+  # Step up to which the pipeline should be executed. Options are : 'mapping', 'count', 'DEA', 'GO'
+  target: "GO"
+  ## Fractional read counting options : only available with featureCounts
+  # Should reads positioned on overlapping features be counted fractionally for each feature they overlap ? Otherwise discarded.
+  overlapping_fractional_counts: "yes"
+  # Should reads mapping equally to multiple regions be counted fractionally for each region ? Otherwise discarded.
+  multimapped_fractional_counts: "yes"
+  do_DESeq2: "yes"
+  do_edgeR: "yes"
+  cutoffs:
+    # Adjusted p-value
+    pADJ: 0.05
+    # Absolute value of log2(fold change)
+    log2FC: 0.5
+  # Should the PCA have individual labels for each sample, or just a legend coloring by condition ? "yes" = labels, anything else = no labels
+  PCA_labels: "no"
+
+DAS:
+  do_DAS: "yes"
+  # mapping or DAS
+  target: "GO"
+  # Length of reads to use for rMATS -- check qc to see read lengths
+  # If all your samples do not have the same read lengths, use the weighted average and activate the following parameter.
+  # Consider attempting to have the same read lengths across samples as this makes analysis somewhat more reliable
+  read_length: 100
+  # Should reads other than those of specified length be useable ? 'yes' or 'no'
+  variable_read_length: "yes"
+  pADJ: 0.05
+  # cutoff for inclusion ratio
+  cutoff: 0.15
+
+DTU:
+  do_DTU: "yes"
+  # salmon & DTU & GO
+  target: "GO"
+  pADJ : 0.05
+  cutoff : 0.15
+  # file used as genome annotation (.gtf) specifically for DTU --> if a specific annotation has to be used for transcriptome
+  # else leave empty and the annotation used for everything else (specified above) will be used here as well
+  annotation: ""
+
+# If GO analysis is done for any step, this is where to set its parameters
+# Species, species index, key type can be set interactively in terminal if you are not using SLURM or another executor/workload manager
+GO:
+  # For DEA only : should up and down-regulated genes be separated for the GO analysis
+  separate_up_down: "yes"
+  # The latin name of the species the dataset being analyzed belongs to.
+  # To be certain a match will be found if the relevant GO database exists, must be written in standard nomenclature as follows (capitalization included) : "Genus species"
+  species: "Arabidopsis thaliana"
+  # Type(s) of ontology to produce results for (BP: Biological Process, MF: Molecular Function, CC: Cellular Compartment)
+  ontology_types: ["BP", "MF", "CC"]
+  # If you are absolutely certain which of the results corresponding to the search for your species is the one you want, you can enter the number for it here instead of interactively
+  species_index_among_results: "1"
+  # Type of key to use for gene IDs. Only fill out if you already know which key type matches with your annotation. Must be in all caps, with no space (ENTREZID, ENSEMBL, REFSEQ...)
+  # If you do not know for sure, leave "" and a list of available key types for your organism will be provided during GO analysis (as well as examples of what they look like on request)
+  key_type: "TAIR"
+
+# Which bioinformatic tools should be used for the various steps of the workflow ?
+tools_to_use:
+  # Should the DEA use salmon instead of a standard mapper? If so, the standard mapping_tool below will only be used for DAS, and the quantification tool will not be used
+  salmon_map: "no"
+  # which trimming tool to use ("cutadapt", "fastp")
+  trimming_tool: "cutadapt"
+  # which mapping tool to use ("hisat2", "star")
+  mapping_tool: "hisat2"
+  # which bam sorting tool to use ("sambamba", "samtools") -- samtools is more common, but often slower
+  bam_sort_tool: "sambamba"
+  # which bam indexing tool to use ("sambamba", "samtools") -- samtools is more common, but often slower
+  bam_index_tool: "sambamba"
+  # which quantification tool to use ("featurecounts", "htseq-count") in DEG step -- used for DEA if salmon was not picked
+  quantification_tool: "featurecounts"
+
+
+# Condition and sample names can be almost anything (avoid spaces and special characters) and don't need to match filenames.
+# Order matters however: files are sorted alphabetically and assigned conditions/samples based on the order listed below
+samples_and_conditions:
+  # List the conditions of your samples in the same order as the corresponding files appear when sorted alphabetically — one condition per pair if paired-end.
+  # If replicates exist, there should be duplicates here
+  conditions: [
+    "C",
+    "C",
+    "HS",
+    "HS"
+  ]
+  # Provide the conditions you wish to compare in the order the comparison should be made
+  # Ex: ["mutant", "wild_type"] leads to mutant/wild_type FC for DEA
+  # Multiple comparisons not possible on a single run --> if required run one comparison, extract results, then another comparison
+  compare: [
+    "HS",
+    "C"
+  ]
+  # List the sample names of your samples in the same order as the corresponding files appear when sorted alphabetically — one condition per pair if paired-end.
+  # Be sure to differentiate replicates here (all sample names must be unique)
+  sample_names: [
+    "C_1",
+    "C_2",
+    "HS_1",
+    "HS_2"
+  ]
+
+### Advanced parameters ###
+threads_fastqc: 2  # Aside from general use, can be increased to solve some OOM java memory heap problems (as memory is assigned on a per thread basis)
+threads_genomeindex: 4  # Should be increased when using large genomes such as Triticum aestivum
+memory_genomeindex: 6000  # Amount of ram in MB to be given to the indexation step - often best to go 3-5 times the size of the reference genome fasta
+threads_sort: 2
+# Set the number of threads to use for every other step - often useful to scale this based on size of files / genome.
+threads_per_step: 2
+
+### Advanced salmon parameters ###
+# Number of bootstraps --> higher = longer, but safer for downstream analysis (by estimation of technical variance). The default of 10 is fairly low, but will be done fast.
+bootstraps: 10
+# 'A' allows salmon to automatically infer library types. If for whatever reason you do not want this, look at salmon documentation to figure out what to put here instead.
+library_type: "A"
+
+### Advanced STAR parameters ###
+indexation_sjdbOverhang: 100
+alignment_intron_min: 21
+alignment_intron_max: 0
+
+## Additional parameters below are to be filled out as if using the command line interface and will be added to the relevant command
+# Define additional parameters to be used in the quality control step (fastqc)
+QC_extra_parameters: ""
+# Define additional parameters to be used in the trimming / cleaning step (fastp/cutadapt)
+Trimming_extra_parameters: ""
+# Define additional parameters to be used in the mapping / salmon step (hisat2/star/salmon)
+Mapping_extra_parameters: ""
+# Define additional parameters to be used in the mapped bam sorting step (samtools sort)
+BamSorting_extra_parameters: ""
+# Define additional parameters to be used in the mapped bam indexing step (samtools index)
+BamIndexing_extra_parameters: ""
+# Define additional parameters to be used in the read counting step (htseq-counts/featureCounts)
+ReadCounting_extra_parameters: ""
+# Define additional parameters to be used in the multiqc summarization step
+Multiqc_extra_parameters: ""

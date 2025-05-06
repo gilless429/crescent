@@ -1,0 +1,59 @@
+[2025-05-06 16:16:53.051] [jointLog] [info] setting maxHashResizeThreads to 64
+[2025-05-06 16:16:53.051] [jointLog] [info] Fragment incompatibility prior below threshold.  Incompatible fragments will be ignored.
+[2025-05-06 16:16:53.051] [jointLog] [info] Usage of --validateMappings implies use of minScoreFraction. Since not explicitly specified, it is being set to 0.65
+[2025-05-06 16:16:53.051] [jointLog] [info] Setting consensusSlack to selective-alignment default of 0.35.
+[2025-05-06 16:16:53.051] [jointLog] [info] parsing read library format
+[2025-05-06 16:16:53.051] [jointLog] [info] There is 1 library.
+[2025-05-06 16:16:53.060] [jointLog] [info] Loading pufferfish index
+[2025-05-06 16:16:53.072] [jointLog] [info] Loading dense pufferfish index.
+[2025-05-06 16:16:54.300] [jointLog] [info] done
+[2025-05-06 16:16:54.382] [jointLog] [info] Index contained 58738 targets
+[2025-05-06 16:16:54.394] [jointLog] [info] Number of decoys : 0
+[2025-05-06 16:16:54.746] [jointLog] [info] Automatically detected most likely library type as U
+
+[2025-05-06 16:16:56.589] [fileLog] [info] 
+At end of round 0
+==================
+Observed 981760 total fragments (981760 in most recent round)
+
+[2025-05-06 16:16:56.588] [jointLog] [info] Computed 18968 rich equivalence classes for further processing
+[2025-05-06 16:16:56.588] [jointLog] [info] Counted 654942 total reads in the equivalence classes 
+[2025-05-06 16:16:56.709] [jointLog] [info] Number of mappings discarded because of alignment score : 728896
+[2025-05-06 16:16:56.710] [jointLog] [info] Number of fragments entirely discarded because of alignment score : 287394
+[2025-05-06 16:16:56.710] [jointLog] [info] Number of fragments discarded because they are best-mapped to decoys : 0
+[2025-05-06 16:16:56.710] [jointLog] [info] Number of fragments discarded because they have only dovetail (discordant) mappings to valid targets : 0
+[2025-05-06 16:16:56.714] [jointLog] [warning] Only 654942 fragments were mapped, but the number of burn-in fragments was set to 5000000.
+The effective lengths have been computed using the observed mappings.
+
+[2025-05-06 16:16:56.714] [jointLog] [info] Mapping rate = 66.711%
+
+[2025-05-06 16:16:56.714] [jointLog] [info] finished quantifyLibrary()
+[2025-05-06 16:16:56.714] [jointLog] [info] Starting optimizer
+[2025-05-06 16:16:56.741] [jointLog] [info] Marked 0 weighted equivalence classes as degenerate
+[2025-05-06 16:16:56.745] [jointLog] [info] iteration = 0 | max rel diff. = 1075.57
+[2025-05-06 16:16:57.546] [jointLog] [info] iteration = 100 | max rel diff. = 2.60503
+[2025-05-06 16:16:58.317] [jointLog] [info] iteration = 200 | max rel diff. = 0.54958
+[2025-05-06 16:16:59.092] [jointLog] [info] iteration = 300 | max rel diff. = 0.358192
+[2025-05-06 16:16:59.254] [jointLog] [info] iteration = 335 | max rel diff. = 0.00486874
+[2025-05-06 16:16:59.256] [jointLog] [info] Finished optimizer
+[2025-05-06 16:16:59.256] [jointLog] [info] writing output 
+
+[2025-05-06 16:16:59.375] [jointLog] [info] Starting Bootstrapping
+[2025-05-06 16:16:59.381] [jointLog] [info] Will draw 10 bootstrap samples
+[2025-05-06 16:16:59.381] [jointLog] [info] Optimizing over 18968 equivalence classes
+[2025-05-06 16:16:59.383] [jointLog] [info] Marked 0 weighted equivalence classes as degenerate
+[2025-05-06 16:17:00.770] [jointLog] [info] wrote 1 bootstraps
+[2025-05-06 16:17:00.925] [jointLog] [info] wrote 2 bootstraps
+[2025-05-06 16:17:00.941] [jointLog] [info] wrote 3 bootstraps
+[2025-05-06 16:17:01.077] [jointLog] [info] wrote 4 bootstraps
+[2025-05-06 16:17:01.094] [jointLog] [info] wrote 5 bootstraps
+[2025-05-06 16:17:01.171] [jointLog] [info] wrote 6 bootstraps
+[2025-05-06 16:17:01.485] [jointLog] [info] wrote 7 bootstraps
+[2025-05-06 16:17:01.524] [jointLog] [info] wrote 8 bootstraps
+[2025-05-06 16:17:02.173] [jointLog] [info] wrote 9 bootstraps
+[2025-05-06 16:17:02.413] [jointLog] [info] wrote 10 bootstraps
+[2025-05-06 16:17:02.415] [jointLog] [info] Finished Bootstrapping
+[2025-05-06 16:17:02.416] [jointLog] [warning] NOTE: Read Lib [[ /data/home/siretag/RNAseq/results/trimmedfq/C1_trim.fq ]] :
+
+Detected a *potential* strand bias > 1% in an unstranded protocol check the file: /data/home/siretag/RNAseq/results/salmon_quant/C1/lib_format_counts.json for details
+

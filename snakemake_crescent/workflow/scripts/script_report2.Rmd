@@ -1,0 +1,72 @@
+---
+title: "Pipeline global report"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+   html_document:
+      number_sections : true
+      toc : true
+      toc_depth : 1
+      toc_float: false
+      highlight: zenburn
+      code_folding: show
+---
+
+```{r, setup, echo=F,results='hide',warning=F}
+
+options(width = 300)
+options(encoding = 'UTF-8')
+
+knitr::opts_chunk$set(
+  fig.width = 7,
+  fig.height = 5,
+  fig.align = "center",
+  fig.show="asis",
+  size = "tiny",
+  include = TRUE,
+  echo = FALSE,
+  eval = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  results="asis",
+  class.source="watch-out",
+  class.output="bg-success"
+)
+```
+
+```{r, Setting up libraries, echo=F}
+library(ggplot2)
+library(ggridges)
+library(tidyr)
+```
+
+```{r, Include multiqc report}
+cat("# Multiqc Report")
+htmltools::includeHTML(snakemake@input[["all_qc"]])
+```
+
+```{r, Include first few rows of counts table, eval=snakemake@params[["target_level"]] >= 3}
+cat("# Counts table - first 20 rows")
+table <- read.table(snakemake@input[["raw_counts"]],row.names=1,header=T,sep="\t",dec=".",fileEncoding = "UTF8",check.names=F)
+table<-round(table,digits=0)
+knitr::kable(head(table,20))
+```
+
+```{r, eval=snakemake@params[["target_level"]] >= 3}
+cat("# Frequency distribution of counts")
+```
+
+```{r, eval=snakemake@params[["target_level"]] >= 3}
+table2 <- pivot_longer(table, cols=everything(), names_to="sample", values_to="counts")
+ridgeplot <- ggplot(table2, aes(x = counts, y = sample, fill=sample)) + geom_density_ridges()+ xlim(0,50)
+ridgeplot
+```
+
+```{r, eval=snakemake@params[["target_level"]] > 4, fig.align="center"}
+cat("# PCA plot of normalized expression levels for all samples")
+if (file.exists(snakemake@input["PCA_plot_DESeq2"])) {
+  knitr::include_graphics(snakemake@input[["PCA_plot_DESeq2"]], rel_path = FALSE)
+}
+if (file.exists(snakemake@input["PCA_plot_edgeR"])) {
+  knitr::include_graphics(snakemake@input[["PCA_plot_edgeR"]], rel_path = FALSE)
+}
+```

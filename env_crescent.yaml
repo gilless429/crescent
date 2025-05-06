@@ -1,0 +1,40 @@
+name: crescent
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - icu
+  # All r packages directly from r
+  - r-base
+  - r-devtools
+  - r-biocmanager
+  - r-data.table
+  - r-ggrepel
+  - r-ggridges
+  - r-ggupset
+  - r-rmarkdown
+  - r-tidyverse
+  - r-wasabi
+  # All r packages from bioconductor
+  - bioconductor-genomeinfodb
+  - bioconductor-clusterprofiler
+  - bioconductor-deseq2
+  - bioconductor-edger
+  - bioconductor-rtracklayer
+  - bioconductor-tximport
+  # Snakemake
+  - snakemake=8.20.3
+  - snakemake-minimal=8.20.3
+  - snakemake-wrapper-utils=0.6.2
+  # Bioinformatic tools required outside of snakemake wrappers
+  - samtools
+  - sambamba
+  - hisat2
+  - star
+  - salmon
+  - multiqc
+  - rmats
+  - htseq
+  - subread>=2.0.6  # minimal version (latest as of pipeline development) specfied due to issues with 1.* versions sometimes getting grabbed for unknown reasons otherwise

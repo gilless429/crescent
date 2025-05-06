@@ -1,0 +1,9 @@
+{
+    "salmon_version": "1.10.3",
+    "libType": "A",
+    "index": "/data/home/siretag/refgen/salmon_index_TAIR_transc",
+    "unmatedReads": "/data/home/siretag/RNAseq/results/trimmedfq/HS2_trim.fq",
+    "output": "/data/home/siretag/RNAseq/results/salmon_quant/HS2",
+    "numBootstraps": "10",
+    "auxDir": "aux_info"
+}

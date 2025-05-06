@@ -1,0 +1,375 @@
+###
+# Folder structure before starting workflow from starting folder :
+# RNAseq/
+#                   bam/ --> RNA-seq reads in bam format
+#                   or
+#                   fastq/ --> RNA-seq reads in fastq format
+# refgen/ --> reference genome
+#             annotation file (.gtf / .gff)
+###
+
+import os
+import re
+
+
+configfile: "config/config_crescent.yaml"
+
+# Pulling info from config file
+WORKING_DIR = config["WORKING_DIR"]
+OUTPUT_DIR = config["OUTPUT_DIR"]
+threads_per_rule = config["threads_per_step"]
+min_read_length = config["min_read_length"]
+min_phred_score = config["min_phred_score"]
+feature = config["genome_and_annotation"]["feature"]
+refgen_folder = config["genome_and_annotation"]["refgen_folder"]
+refgen = config["genome_and_annotation"]["genome"]
+reftr = config["genome_and_annotation"]["transcriptome"]
+reference_index = config["genome_and_annotation"]["reference_index"]
+annotation = config["genome_and_annotation"]["annotation"]
+annotation_DTU = annotation if config["DTU"]["annotation"] == "" else config["DTU"]["annotation"]
+id_type = config["genome_and_annotation"]["id_type"]
+indexation_sjdbOverhang = str(config["indexation_sjdbOverhang"])
+alignment_intron_min = str(config["alignment_intron_min"])
+alignment_intron_max = str(config["alignment_intron_max"])
+
+# Ensure a / is present at the end of the WORKING_DIR address
+if not WORKING_DIR.endswith("/"):
+    WORKING_DIR += '/'
+# Ensure a / is present at the end of the WORKING_DIR address
+if not OUTPUT_DIR.endswith("/"):
+    OUTPUT_DIR += '/'
+# Ensure a / is present at the end of the refgen_folder address
+if not refgen_folder.endswith("/"):
+    refgen_folder += '/' 
+
+# Setting a parameter for paired-end, True if it is, False otherwise
+paired_end = True if re.match("(yes|true|paired)", config["paired_end"], flags = re.IGNORECASE) else False
+#print("Was the sequencing paired-end ?", str(paired_end))
+
+target_DEA = 0
+# Setting the DEA 'target' variable based on step to reach
+# Try to match various possible inputs for all steps with regex
+if re.match('(map|align|star|hisat|salmon)', config["DEA"]["target"], flags = re.IGNORECASE):
+    target_DEA = 1
+elif re.match('(count|feature|htseq)', config["DEA"]["target"], flags = re.IGNORECASE):
+    target_DEA = 2
+elif re.match('(deseq|edger|differential)', config["DEA"]["target"], flags = re.IGNORECASE) or config["DEA"]["target"].lower() == 'dea':
+    target_DEA = 3
+elif re.match('(ontology|enrichment)', config["DEA"]["target"], flags = re.IGNORECASE) or config["DEA"]["target"].lower() == 'go':
+    target_DEA = 4
+else:  # if none of the possible steps to stop at are matched, the error below is raised
+    raise ValueError("The DEA target step was not properly set. The valid options are : 'mapping', 'count', 'DEA'. Please enter one of the above in the DEA 'target' field of the configuration file.")
+
+target_DAS = 0
+# Setting the DAS 'target' variable based on step to reach
+# Try to match various possible inputs for all steps with regex
+if re.match('(map|align|star|hisat|salmon)', config["DAS"]["target"], flags = re.IGNORECASE):
+    target_DAS = 1
+elif re.match('(rmats|splic|DAS)', config["DAS"]["target"], flags = re.IGNORECASE):
+    target_DAS = 2
+elif re.match('GO', config["DAS"]["target"], flags = re.IGNORECASE):
+    target_DAS = 3
+else:  # if none of the possible steps to stop at are matched, the error below is raised
+    raise ValueError("The DAS target step was not properly set. The valid options are : 'mapping', 'DAS'. Please enter one of the above in the DAS 'target' field of the configuration file.")
+
+target_DTU = 0
+# Setting the DTU 'target' variable based on step to reach
+# Try to match various possible inputs for all steps with regex
+if re.match('(map|quantif|salmon)', config["DTU"]["target"], flags = re.IGNORECASE):
+    target_DTU = 1
+elif re.match('(rats|splic|DTU)', config["DTU"]["target"], flags = re.IGNORECASE):
+    target_DTU = 2
+elif re.match('GO', config["DTU"]["target"], flags = re.IGNORECASE):
+    target_DTU = 3
+else:  # if none of the possible steps to stop at are matched, the error below is raised
+    raise ValueError("The DTU target step was not properly set. The valid options are : 'quantif', 'DTU'. Please enter one of the above in the DTU 'target' field of the configuration file.")
+
+# Are starting input mapped bam files ?
+input_mapped = True if re.match("(yes|true)", config["input_mapped"], flags = re.IGNORECASE) else False
+
+# Should raw qc be done ?
+do_rawqc = True if re.match("(yes|true)", config["do_rawqc"], flags = re.IGNORECASE) else False
+# Should trimming be done ?
+do_trimming = True if re.match("(yes|true)", config["do_trimming"], flags = re.IGNORECASE) else False
+# Should DEA step be done ?
+do_DEA = True if re.match("(yes|true)", config["DEA"]["do_DEA"], flags = re.IGNORECASE) else False
+# Should DAS step be done ?
+do_DAS = True if re.match("(yes|true)", config["DAS"]["do_DAS"], flags = re.IGNORECASE) else False
+# Should DTU step be done ?
+do_DTU = True if re.match("(yes|true)", config["DTU"]["do_DTU"], flags = re.IGNORECASE) else False
+
+# If input is already mapped, rawqc, trimming, and DTU are impossible
+# This turns them off regardless of config file values
+if input_mapped:
+    do_rawqc = False
+    do_trimming = False
+    do_DTU = False
+    print("As input is already mapped sequencing qc, trimming, and DTU will not be done.")
+
+onstart:
+    print("Will raw read qc be done ?", str(do_rawqc))
+    print("Will trimming be done ?", str(do_trimming))
+    print("Will DEA be done ?", str(do_DEA))
+    print("Will DAS be done ?", str(do_DAS))
+    print("Will DTU be done ?", str(do_DTU))
+
+# Which trimming tool to use ?
+if do_trimming:
+    if re.match('(cut|adapt)', config["tools_to_use"]["trimming_tool"], re.IGNORECASE):
+        if paired_end :
+            trim_wrapper = "v4.5.0/bio/cutadapt/pe"
+        else :
+            trim_wrapper = "v4.5.0/bio/cutadapt/se"
+    elif 'fast' in config["tools_to_use"]["trimming_tool"].lower():
+        trim_wrapper = "v4.5.0/bio/fastp"
+    else:
+        raise ValueError("Your trimmer was not properly set : please choose either 'cutadapt' or 'fastp' !")
+
+# Should salmon be used instead of a typical mapping strategy in DEA?
+salmon_map = False
+if config["tools_to_use"]["salmon_map"] == "yes":
+    salmon_map = True
+# Which mapping (indexing & alignment) tool to use ?
+# I chose to have map_tool and index_wrapper exist even in cases where they are not truly used, as otherwise errors occur in mapping.smk from their absence,
+# and a couple of small unused variables in some cases seems less problematic than setting up an if in mapping.smk that could cause other problems down the line
+if "hisat" in config["tools_to_use"]["mapping_tool"].lower():
+    index_wrapper = "v4.7.2/bio/hisat2/index"
+    map_tool = "hisat2"
+elif "star" in config["tools_to_use"]["mapping_tool"].lower():
+    index_wrapper = "v4.7.2/bio/star/index"
+    map_tool = "star"
+else:
+    raise ValueError("Your mapper was not properly set : please choose either 'hisat2' or 'star' !")
+
+# Should samtools or sambamba be used for sort and index steps
+if config["tools_to_use"]["bam_sort_tool"].lower() == "sambamba":
+    sort_tool = "sambamba"
+elif config["tools_to_use"]["bam_sort_tool"].lower() == "samtools":
+    sort_tool = "samtools"
+else:
+    raise ValueError("Your bam sorting tool was not properly set : please choose either 'samtools' or 'sambamba' !")
+if config["tools_to_use"]["bam_index_tool"].lower() == "sambamba":
+    bamindex_wrapper = "v5.5.0/bio/sambamba/index"
+elif config["tools_to_use"]["bam_index_tool"].lower() == "samtools":
+    bamindex_wrapper = "v5.5.0/bio/samtools/index"
+else:
+    raise ValueError("Your bam indexing tool was not properly set : please choose either 'samtools' or 'sambamba' !")
+
+### Read counter & strandedness ? ###
+# First match the quantification tool the user chose (here featurecounts)
+if salmon_map :
+    quantif_tool = 'salmon'  # Used by DEA's count_matrix and DESeq2 scripts
+    if re.match("(yes|true)", config["stranded"], flags = re.IGNORECASE) or config["stranded"] == "y":
+        stranded = 1
+    elif re.match("(no|false)", config["stranded"], flags = re.IGNORECASE) or config["stranded"] == "n":
+        stranded = 0
+    elif "rev" in config["stranded"].lower():
+        stranded = 2
+elif "feature" in config["tools_to_use"]["quantification_tool"].lower():
+    quantif_tool = 'featurecounts'
+    # Then cover all possible types of strandedness inputted
+    if re.match("(yes|true)", config["stranded"], flags = re.IGNORECASE) or config["stranded"] == "y":
+        stranded = 1
+    elif re.match("(no|false)", config["stranded"], flags = re.IGNORECASE) or config["stranded"] == "n":
+        stranded = 0
+    elif "rev" in config["stranded"].lower():
+        stranded = 2
+    else:  # if the stranded user input does not match any of the above, then it was improperly set and the below error is raised
+        raise ValueError("Your stranded value was not properly set : acceptable values are 'yes', 'no', or 'rev' depending on the strandedness of your sequencing. If you are unable to find out whether and how your sequencing is stranded, it is recommended that you use unstranded read counting ('no') by default.")
+# Other possible quantification tool match
+elif 'htseq' in config["tools_to_use"]["quantification_tool"].lower():
+    quantif_tool = 'htseq'
+    # Then cover all possible types of strandedness inputted
+    if re.match("(yes|true)", config["stranded"], flags = re.IGNORECASE):
+        stranded = 'yes'
+    elif re.match("(no|false)", config["stranded"], flags = re.IGNORECASE):
+        stranded = 'no'
+    elif "rev" in config["stranded"].lower():
+        stranded = 'reverse'
+    else:  # if the stranded user input does not match any of the above, then it was improperly set and the below error is raised
+        raise ValueError("Your stranded value was not properly set : acceptable values are 'yes', 'no', or 'rev' depending on the strandedness of your sequencing. If you are unable to find out whether and how your sequencing is stranded, it is recommended that you use unstranded read counting ('no') by default.")
+else:  # if neither featurecounts nor htseq-count was matched with the user input for the quantification tool, throw an error stating so
+    raise ValueError("Your read counter was not properly set : please choose either 'featurecounts' or 'htseq-count' !")
+
+# Should DESeq2, edgeR, or both be used?
+do_edgeR = False
+do_DESeq2 = False
+if config["DEA"]["do_edgeR"] == "yes":
+    do_edgeR = True
+if config["DEA"]["do_DESeq2"] == "yes":
+    do_DESeq2 = True
+
+# Looking for bam files and fastq files in their respective folders and adding them all to the list of files to go through
+filenames = []  # Used throughout the snakefile as the list of filenames to utilize as a base from which to define and name all inputs & outputs for all steps ; if results are paired_end, will not include the _1 or _2 detailing pair
+paired_fullnames = []  # Used to provide the full individual file names to fastqc if files are paired_end results
+if os.path.exists(WORKING_DIR+'RNAseq/bam/'):
+    for file in os.listdir(WORKING_DIR+'RNAseq/bam/'):
+        if file.endswith('.bam'):
+            if paired_end:
+                paired_fullnames.append(file.replace('.bam', ""))
+                file = re.sub(r'_(1|2)$', '', file.replace('.bam', ""))
+            else:
+                file = file.replace('.bam', "")
+            filenames.append(file)
+
+# fasq_ext is used to define whether our fastq files end with .fastq or .fq (with a possible .gz compression)
+# This is primarily useful to provide the right file path to mapping.smk steps when trimming is not done
+fastq_ext = '.fastq'
+if os.path.exists(WORKING_DIR+'RNAseq/fastq/'):
+    for file in os.listdir(WORKING_DIR+'RNAseq/fastq/'):
+        if file.endswith('.fastq') or file.endswith('.fq') or file.endswith('.fq.gz') or file.endswith('.fastq.gz'):
+            if file.endswith('.gz'):
+                fastq_ext = '.fq.gz' if file.endswith('.fq.gz') else '.fastq.gz'
+            else:
+                fastq_ext = '.fastq' if file.endswith('.fastq') else '.fq'
+            # Getting the 
+            if paired_end:
+                paired_fullnames.append(file.replace('.fastq', '').replace('.fq', '').replace('.gz', ''))
+                file = re.sub(r'_(1|2)$', '', file.replace('.fastq', '').replace('.fq', '').replace('.gz', ''))
+            else:
+                file = file.replace('.fastq', '').replace('.fq', '').replace('.gz', '')
+            filenames.append(file)
+last_file = filenames[-1]
+filenames = list(set(filenames))
+
+# Directory in which DESeq2 and edgeR find the quantification files (salmon results or counts from htseq-count/featurecounts)
+DEA_quant_folder = OUTPUT_DIR+"RNAseq/results/salmon_quant/" if salmon_map else OUTPUT_DIR+"RNAseq/results/counts/"
+
+not_control = config["samples_and_conditions"]["compare"][0]
+control = config["samples_and_conditions"]["compare"][1]
+
+"""
+rule all defines all files required as outputs by the end of the execution of the script
+all steps' ouputs are required by the end report itself, with conditions to make each output's requirement
+dependant upon whether the pipeline executes its corresponding rule (w/ regards to config DEA target value)
+If one wishes to alter this pipeline's code to add outputs (such as with an additional rule), there are two options :
+- if this additional output will be used in the multiqc report or the final report, it should simply be added there as input, but not here in rule all (it would be redundant),
+- if this additional output will not be used in either report, then it should be added here.
+"""
+rule all:
+    input:
+        # sort and index outputs are put here so that they are done with mapping always, even if no further steps are taken
+        #sort = expand(OUTPUT_DIR+"RNAseq/results/mapped/sorted/{filename}.bam", filename = filenames) if (target_DEA >= 1 and (do_DEA and not salmon_map)) or (target_DAS >= 1 and do_DAS) else [],
+        #index = expand(OUTPUT_DIR+"RNAseq/results/mapped/sorted/{filename}.bai", filename = filenames) if (target_DEA >= 1 and (do_DEA and not salmon_map)) or (target_DAS >= 1 and do_DAS) else [],
+        # GO output, DAS output, and DTU output, are not currently use anywhere else, so they need to be specified here -- if they become used by the final report, this will be unnecessary
+        barplotgo_DEA = (OUTPUT_DIR + "RNAseq/results/GO_analysis/DEA/"+config['GO']['ontology_types'][0]+"/barplotGO_" + ("_".join([not_control, "VS", control, "all_genes", config['GO']['ontology_types'][0]]) if config['GO']['separate_up_down'] == "no" else "_".join([not_control, "VS", control, "upregulated", config['GO']['ontology_types'][0]])) + ".pdf") if (do_DEA and target_DEA >= 4) else [],
+        barplotgo_DTU = (OUTPUT_DIR + "RNAseq/results/GO_analysis/DTU/"+config['GO']['ontology_types'][0]+"/barplotGO_" + "_".join([not_control, "VS", control, "all_genes", config['GO']['ontology_types'][0]]) + ".pdf") if (do_DTU and target_DTU >= 3) else [],
+        barplotgo_DAS = (OUTPUT_DIR + "RNAseq/results/GO_analysis/DAS/"+config['GO']['ontology_types'][0]+"/barplotGO_" + "_".join([not_control, "VS", control, "all_genes", config['GO']['ontology_types'][0]]) + ".pdf") if (do_DAS and target_DAS >= 3) else [],
+        DAS_output = OUTPUT_DIR+"RNAseq/results/DAS/DAS_ids.txt" if do_DAS and target_DAS >= 2 else [],
+        # DTU_ids_tsv = OUTPUT_DIR+"RNAseq/results/DTU/DTU_ids.txt",  
+        DTU_genes_tsv = OUTPUT_DIR+"RNAseq/results/DTU/DTU_results_gene_level.tsv" if do_DTU and target_DTU>=2 else [],
+        DTU_transcripts_tsv = OUTPUT_DIR+"RNAseq/results/DTU/DTU_results_transcript_level.tsv" if do_DTU and target_DTU>=2 else [],
+        # multiqc & final report from which most other outputs are derived to be necessary
+        multiqc = OUTPUT_DIR+"RNAseq/results/global_report/allqc/multiqc_report.html" if do_DEA or do_DAS or do_DTU or do_trimming or do_rawqc else [],
+        report = OUTPUT_DIR+"RNAseq/results/global_report/pipeline_report.html" if do_DEA else []
+
+# If (some) raw reads are provided in bam format, they are decompressed to fastq files
+rule bamTofastq:
+    input:
+        single = WORKING_DIR+"RNAseq/bam/{filename}.bam" if not paired_end else [],
+        paired_1 = WORKING_DIR+"RNAseq/bam/{filename}_1.bam" if paired_end else [],
+        paired_2 = WORKING_DIR+"RNAseq/bam/{filename}_2.bam" if paired_end else []
+    output:
+        single_fq = WORKING_DIR+"RNAseq/fastq/{filename}" + fastq_ext if not paired_end else [],
+        paired_1_fq = WORKING_DIR+"RNAseq/fastq/{filename}_1" + fastq_ext if paired_end else [],
+        paired_2_fq = WORKING_DIR+"RNAseq/fastq/{filename}_2" + fastq_ext if paired_end else []
+    threads: threads_per_rule
+    priority:1
+    benchmark:
+        OUTPUT_DIR+"benchmark/bamTofastq/{filename}.tsv}"
+    run:
+        if not paired_end:
+            shell("samtools bam2fq {input.single} > {output.single_fq}")
+        else:
+            shell("samtools bam2fq {input.paired_1} > {output.paired_1_fq}")
+            shell("samtools bam2fq {input.paired_2} > {output.paired_2_fq}")
+
+# Initial quality control
+rule sequencing_qc:
+    input:
+        WORKING_DIR+"RNAseq/fastq/{filename}" + fastq_ext if not paired_end else WORKING_DIR+"RNAseq/fastq/{paired_fullname}" + fastq_ext  # input raw fastq
+    output:
+        zip = OUTPUT_DIR+"RNAseq/results/sequencing_qc/{filename}_fastqc.zip" if not paired_end else OUTPUT_DIR+"RNAseq/results/sequencing_qc/{paired_fullname}_fastqc.zip",  # the zip is used by multiqc
+        html = OUTPUT_DIR+"RNAseq/results/sequencing_qc/{filename}_fastqc.html" if not paired_end else OUTPUT_DIR+"RNAseq/results/sequencing_qc/{paired_fullname}_fastqc.html"  # the html is a standard output and easier for single-sample visualization
+    params:
+        extra = "--quiet" + config["QC_extra_parameters"]  # suppresses all progress messages to avoid clogging up the terminal
+    priority: 1
+    threads: config["threads_fastqc"]
+    resources: mem_mb=config["threads_fastqc"]*512  # normal fastqc behavior is 512MB per thread, this has to be assigned here due to the wrapper code dividing available rule memory by number of threads for each execution
+    benchmark:
+        OUTPUT_DIR+"benchmark/sequencing_qc/{filename}.tsv" if not paired_end else OUTPUT_DIR+"benchmark/sequencing_qc/{paired_fullname}.tsv"
+    wrapper:
+        "v4.7.2/bio/fastqc"
+
+# Trimming fq files and removing original fq files
+if do_trimming:
+    rule cleaning:
+        input:
+            sample = [WORKING_DIR+"RNAseq/fastq/{filename}" + fastq_ext] if not paired_end else ([WORKING_DIR+"RNAseq/fastq/{filename}_1" + fastq_ext, WORKING_DIR+"RNAseq/fastq/{filename}_2" + fastq_ext]),
+        output:
+            fastq = OUTPUT_DIR+"RNAseq/results/trimmedfq/{filename}_trim.fq" if not paired_end else [],  # trimmed single-end output cutadapt
+            fastq1 = OUTPUT_DIR+"RNAseq/results/trimmedfq/{filename}_1_trim.fq" if paired_end else [],  # trimmed paired-end output 1 cutadapt
+            fastq2 = OUTPUT_DIR+"RNAseq/results/trimmedfq/{filename}_2_trim.fq" if paired_end else [],  # trimmed paired-end output 2 cutadapt
+            qc = OUTPUT_DIR+"RNAseq/results/trimmedfq/report/{filename}.txt" if "cutadapt" in trim_wrapper else [],  # Text report on trimming required for multiqc (cutadapt only)
+            trimmed = [OUTPUT_DIR+"RNAseq/results/trimmedfq/{filename}_trim.fq"] if not paired_end else [OUTPUT_DIR+"RNAseq/results/trimmedfq/{filename}_1_trim.fq", OUTPUT_DIR+"RNAseq/results/trimmedfq/{filename}_2_trim.fq"],  # trimmed output fastp
+            json = OUTPUT_DIR+"RNAseq/results/trimmedfq/report/{filename}.json" if "fastp" in trim_wrapper else [],  # json report on trimming required for multiqc (fastp only)
+            html = OUTPUT_DIR+"RNAseq/results/trimmedfq/report/{filename}.html" if "fastp" in trim_wrapper else []  # part of fastp outputs
+        params:
+            extra = config["Trimming_extra_parameters"] + (" -q " + str(min_phred_score) + " -m " + str(min_read_length)) if "cutadapt" in trim_wrapper else ("-w " + str(threads_per_rule) + " -q " + str(min_phred_score) + " -l " + str(min_read_length)),
+        threads: threads_per_rule
+        priority:1
+        benchmark:
+            OUTPUT_DIR+"benchmark/do_trimming/{filename}.tsv"
+        wrapper:
+            trim_wrapper
+
+### The 'mapping' rules include salmon / hisat2 / star execution and, in the last 2 cases, the requisite sorting for following operations
+include: "rules/mapping3.smk"
+### DEA only steps
+if do_DEA:
+    include: "rules/DEA3.smk"
+### DAS only steps
+if do_DAS:
+    include: "rules/DAS2.smk"
+### DTU only step
+if do_DTU:
+    include: "rules/DTU3.smk"
+
+# Creating multiqc report of all previously executed steps : target parameters used to conditionally apply this rule to only those files that are available at the time
+rule multiqc:
+    input:
+        single_seq_report = expand(OUTPUT_DIR+"RNAseq/results/sequencing_qc/{filename}_fastqc.zip", filename = filenames) if do_rawqc and not (paired_end or input_mapped) else [],
+        paired_seq_report = expand(OUTPUT_DIR+"RNAseq/results/sequencing_qc/{paired_fullname}_fastqc.zip", paired_fullname = paired_fullnames) if do_rawqc and paired_end and not input_mapped else [],
+        trim_report = (expand(OUTPUT_DIR+"RNAseq/results/trimmedfq/report/{filename}.txt", filename = filenames) if "cutadapt" in trim_wrapper else expand(OUTPUT_DIR+"RNAseq/results/trimmedfq/report/{filename}.json", filename = filenames)) if do_trimming and not input_mapped else [],
+        map_report = (expand(OUTPUT_DIR+"RNAseq/results/mapped/{filename}.txt", filename = filenames) if "hisat2" in map_tool else expand(OUTPUT_DIR+"RNAseq/results/mapped/{filename}_Log.final.out", filename = filenames)) if not (salmon_map or input_mapped) and ((target_DEA >= 1 and do_DEA) or (target_DAS >= 1 and do_DAS)) else [],
+        count_report = (expand(OUTPUT_DIR+"RNAseq/results/counts/{filename}_count.txt.summary", filename = filenames) if quantif_tool == "featurecounts" else expand(OUTPUT_DIR+"RNAseq/results/counts/{filename}_count.txt", filename = filenames)) if do_DEA and target_DEA >= 2 and (not salmon_map or input_mapped) else [],  # if input_mapped then we don't care whether salmon_map
+        salmon_report = expand(OUTPUT_DIR+"RNAseq/results/salmon_quant/{filename}/", filename = filenames) if not input_mapped and ((do_DTU and target_DTU >= 1) or (salmon_map and do_DEA and target_DEA >= 1)) else []
+    threads: threads_per_rule
+    output:
+        OUTPUT_DIR+"RNAseq/results/global_report/allqc/multiqc_report.html"
+    params:
+        extra = config["Multiqc_extra_parameters"],
+        outdir = OUTPUT_DIR+"RNAseq/results/global_report/allqc"
+    benchmark:
+        OUTPUT_DIR+"benchmark/multiqc/multiqc.tsv"
+    run:
+        shell("multiqc --force --template simple --no-data-dir {params.extra} --outdir {params.outdir} --filename multiqc_report {input}")
+
+# global rmarkdown report
+rule report:
+    input:
+        all_qc = OUTPUT_DIR+"RNAseq/results/global_report/allqc/multiqc_report.html",
+        raw_counts = DEA_quant_folder + "count_matrix.tsv" if target_DEA >= 3 and do_DEA else [],
+        norm_read_counts_DESeq2 = OUTPUT_DIR + "RNAseq/results/DEA/" + "DESeq2/" + "normalized_counts_matrix.tsv" if target_DEA >= 3 and do_DEA and do_DESeq2 else [],
+        PCA_plot_DESeq2 = OUTPUT_DIR + "RNAseq/results/DEA/" + "DESeq2/" + "PCAplot.pdf"  if target_DEA >= 3 and do_DEA and do_DESeq2 else [],
+        norm_read_counts_edgeR = OUTPUT_DIR + "RNAseq/results/DEA/" + "edgeR/" + "normalized_counts_matrix.tsv" if target_DEA >= 3 and do_DEA and do_edgeR else [],
+        PCA_plot_edgeR = OUTPUT_DIR + "RNAseq/results/DEA/" + "edgeR/" + "PCAplot.pdf"  if target_DEA >= 3 and do_DEA and do_edgeR else [],
+        common_DEGs = OUTPUT_DIR + "RNAseq/results/DEA/" + "common_ids_" + config["samples_and_conditions"]["compare"][0] + "vs" + config["samples_and_conditions"]["compare"][1] + ".txt" if target_DEA >= 3 and do_DEA and do_edgeR and do_DESeq2 else []
+    output:
+        OUTPUT_DIR+"RNAseq/results/global_report/pipeline_report.html"
+    params:
+        target_level = target_DEA
+    benchmark:
+        OUTPUT_DIR+"benchmark/report/report.tsv"
+    script:
+        "scripts/script_report2.Rmd"

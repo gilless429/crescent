@@ -1,0 +1,57 @@
+[2025-05-06 16:16:53.053] [jointLog] [info] setting maxHashResizeThreads to 64
+[2025-05-06 16:16:53.053] [jointLog] [info] Fragment incompatibility prior below threshold.  Incompatible fragments will be ignored.
+[2025-05-06 16:16:53.053] [jointLog] [info] Usage of --validateMappings implies use of minScoreFraction. Since not explicitly specified, it is being set to 0.65
+[2025-05-06 16:16:53.053] [jointLog] [info] Setting consensusSlack to selective-alignment default of 0.35.
+[2025-05-06 16:16:53.053] [jointLog] [info] parsing read library format
+[2025-05-06 16:16:53.053] [jointLog] [info] There is 1 library.
+[2025-05-06 16:16:53.060] [jointLog] [info] Loading pufferfish index
+[2025-05-06 16:16:53.072] [jointLog] [info] Loading dense pufferfish index.
+[2025-05-06 16:16:54.300] [jointLog] [info] done
+[2025-05-06 16:16:54.394] [jointLog] [info] Index contained 58738 targets
+[2025-05-06 16:16:54.409] [jointLog] [info] Number of decoys : 0
+[2025-05-06 16:16:54.820] [jointLog] [info] Automatically detected most likely library type as U
+
+[2025-05-06 16:16:56.467] [jointLog] [info] Computed 20248 rich equivalence classes for further processing
+[2025-05-06 16:16:56.467] [jointLog] [info] Counted 478979 total reads in the equivalence classes 
+[2025-05-06 16:16:56.559] [jointLog] [info] Number of mappings discarded because of alignment score : 809818
+[2025-05-06 16:16:56.559] [jointLog] [info] Number of fragments entirely discarded because of alignment score : 321631
+[2025-05-06 16:16:56.559] [jointLog] [info] Number of fragments discarded because they are best-mapped to decoys : 0
+[2025-05-06 16:16:56.559] [jointLog] [info] Number of fragments discarded because they have only dovetail (discordant) mappings to valid targets : 0
+[2025-05-06 16:16:56.562] [jointLog] [warning] Only 478979 fragments were mapped, but the number of burn-in fragments was set to 5000000.
+The effective lengths have been computed using the observed mappings.
+
+[2025-05-06 16:16:56.562] [jointLog] [info] Mapping rate = 50.8015%
+
+[2025-05-06 16:16:56.562] [jointLog] [info] finished quantifyLibrary()
+[2025-05-06 16:16:56.563] [jointLog] [info] Starting optimizer
+[2025-05-06 16:16:56.597] [jointLog] [info] Marked 0 weighted equivalence classes as degenerate
+[2025-05-06 16:16:56.605] [jointLog] [info] iteration = 0 | max rel diff. = 798.057
+[2025-05-06 16:16:56.467] [fileLog] [info] 
+At end of round 0
+==================
+Observed 942845 total fragments (942845 in most recent round)
+
+[2025-05-06 16:16:57.243] [jointLog] [info] iteration = 100 | max rel diff. = 17.7496
+[2025-05-06 16:16:58.117] [jointLog] [info] iteration = 188 | max rel diff. = 0.00995104
+[2025-05-06 16:16:58.119] [jointLog] [info] Finished optimizer
+[2025-05-06 16:16:58.119] [jointLog] [info] writing output 
+
+[2025-05-06 16:16:58.245] [jointLog] [info] Starting Bootstrapping
+[2025-05-06 16:16:58.252] [jointLog] [info] Will draw 10 bootstrap samples
+[2025-05-06 16:16:58.252] [jointLog] [info] Optimizing over 20248 equivalence classes
+[2025-05-06 16:16:58.256] [jointLog] [info] Marked 0 weighted equivalence classes as degenerate
+[2025-05-06 16:16:59.550] [jointLog] [info] wrote 1 bootstraps
+[2025-05-06 16:16:59.825] [jointLog] [info] wrote 2 bootstraps
+[2025-05-06 16:17:00.090] [jointLog] [info] wrote 3 bootstraps
+[2025-05-06 16:17:00.330] [jointLog] [info] wrote 4 bootstraps
+[2025-05-06 16:17:00.398] [jointLog] [info] wrote 5 bootstraps
+[2025-05-06 16:17:00.544] [jointLog] [info] wrote 6 bootstraps
+[2025-05-06 16:17:00.552] [jointLog] [info] wrote 7 bootstraps
+[2025-05-06 16:17:00.823] [jointLog] [info] wrote 8 bootstraps
+[2025-05-06 16:17:00.901] [jointLog] [info] wrote 9 bootstraps
+[2025-05-06 16:17:01.266] [jointLog] [info] wrote 10 bootstraps
+[2025-05-06 16:17:01.269] [jointLog] [info] Finished Bootstrapping
+[2025-05-06 16:17:01.269] [jointLog] [warning] NOTE: Read Lib [[ /data/home/siretag/RNAseq/results/trimmedfq/HS1_trim.fq ]] :
+
+Detected a *potential* strand bias > 1% in an unstranded protocol check the file: /data/home/siretag/RNAseq/results/salmon_quant/HS1/lib_format_counts.json for details
+
