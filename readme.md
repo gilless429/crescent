@@ -149,6 +149,8 @@ You can get support by contacting the project collaborators, in this order :
 * gilles.sireta@uca.fr
 * gwendal.cueff@inrae.fr
 * darbotvincent@gmail.com
+
+Corresponding authors (less bioinformatically inclined):
 * aline.probst@uca.fr
 * christophe.tatout@uca.fr
 
