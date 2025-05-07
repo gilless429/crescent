@@ -146,13 +146,13 @@ The multiqc results summarizing whichever of sequencing qc, trimming, mapping, s
 
 You can get support by contacting the project collaborators, in this order :
 
-* gilles.sireta@uca.fr
+* gilles.sireta@uca.fr (main developer)
 * gwendal.cueff@inrae.fr
 * darbotvincent@gmail.com
 
 Corresponding authors (less bioinformatically inclined):
-* aline.probst@uca.fr
 * christophe.tatout@uca.fr
+* aline.probst@uca.fr
 
 ## Contributing
 
