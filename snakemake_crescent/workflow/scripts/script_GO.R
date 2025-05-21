@@ -221,7 +221,6 @@ if (num_genes < min_genes) {
       # Simplify and generate plots
       simplego <- clusterProfiler::simplify(ego)
       # Create base file name to be reused for all plots
-      if
       base_filename <- paste(not_control, "VS", control, set_name, ontology_type, sep = "_")
       # Output plots
       barplot(simplego)
