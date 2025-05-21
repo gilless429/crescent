@@ -40,7 +40,7 @@ If you intend to use CRESCENT via executors such as an HPC scheduler like slurm 
 	Flux: `conda install bioconda::snakemake-executor-plugin-flux`
 	DRMAA: `conda install bioconda::snakemake-executor-plugin-drmaa`
 
-Others can be found in the [snakemake documentation](executors such as an HPC scheduler).
+Others can be found in the [snakemake documentation](https://snakemake.github.io/snakemake-plugin-catalog/index.html).
 
 ## How to install and prepare
 
