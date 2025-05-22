@@ -23,6 +23,8 @@ dependencies:
   - bioconductor-deseq2
   - bioconductor-edger
   - bioconductor-rtracklayer
+  - bioconductor-genomicranges
+  - bioconductor-rhdf5
   - bioconductor-tximport
   # Snakemake
   - snakemake=8.20.3
