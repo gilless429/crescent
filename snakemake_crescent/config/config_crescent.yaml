@@ -6,7 +6,7 @@ WORKING_DIR: "/home/working_folder/"
 
 # Path to the output directory, where all output files will be placed in an 'RNAseq/results/' folder
 # This can be the same as the above if you wish to have the outputs with the inputs
-OUTPUT_DIR : "/home/results_folder"
+OUTPUT_DIR: "/home/results_folder/"
 
 # Is input already mapped bam (not fastq compressed as bam, which also happens)? If True, DEA and DAS are available, but DTU requires fastq for salmon quantification
 input_mapped: "no"
