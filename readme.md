@@ -31,6 +31,8 @@ conda activate crescent
 ```
 
 Multiple tools are also deployed via snakemake wrappers as CRESCENT is launched, requiring a working conda installation but no further step by the user than to include '--use-conda' in the snakemake command.
+Some older systems might run into trouble with multiqc's latest versions. If multiqc specifically fails when running the pipeline then specifying that version 1.13 should be installed by replacing the line containing it in env_crescent.yaml with the following should solve the problem:
+`  - multiqc`
 
 If you intend to use CRESCENT via executors such as an HPC scheduler like slurm or lsf, you need to install the corresponding plugin as well:
 
@@ -46,7 +48,9 @@ Others can be found in the [snakemake documentation](https://snakemake.github.io
 
 ### Dataset and reference genome
 
-In this repository you will find the files required to run the pipeline (snakefile, rule modules, scripts, config file) under snakemake_crescent as well as a small test dataset under Test_data (along with its reference genome, transcriptome, and annotation which are all compressed as .gz and need to be unzipped before use). The config file provided, snakemake_crescent/config/config_crescent.yaml, is set up to work with the test data. Only the WORKING_DIR and OUTPUT_DIR need to be changed, providing the directory where `RNAseq` and `refgen` folders are found as described below. The expected results are provided in Test_data_results.
+In this repository you will find the files required to run the pipeline (snakefile, rule modules, scripts, config file) under snakemake_crescent as well as a small test dataset under Test_data (along with its reference genome, transcriptome, and annotation which are all compressed as .gz and **need to be unzipped before use**).
+
+The config file provided, snakemake_crescent/config/config_crescent.yaml, is set up to work with the test data. Only the **WORKING_DIR and OUTPUT_DIR need to be changed**, providing the directory where both `RNAseq` and `refgen` folders are found as described below. The expected results are provided in Test_data_results.
 
 The dataset needs to be placed in a working folder that you can define in the config file, and which needs to contain a specific structure to work shown below.
 
