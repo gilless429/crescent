@@ -30,6 +30,8 @@ conda env create -f env_crescent.yaml
 conda activate crescent
 ```
 
+Some incompatibility issues may arise if conda channel priorities are set to strict. If you are seeing conflicts between packages, check your .condarc and remove 'channel_priority: strict' if present, for the duration of the installation.
+
 Multiple tools are also deployed via snakemake wrappers as CRESCENT is launched, requiring a working conda installation but no further step by the user than to include '--use-conda' in the snakemake command.
 Some older systems might run into trouble with multiqc's latest versions. If multiqc specifically fails when running the pipeline then specifying that version 1.13 should be installed by replacing the line containing it in env_crescent.yaml with the following should solve the problem:
 `  - multiqc`
