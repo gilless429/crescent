@@ -34,7 +34,7 @@ Some incompatibility issues may arise if conda channel priorities are set to str
 
 Multiple tools are also deployed via snakemake wrappers as CRESCENT is launched, requiring a working conda installation but no further step by the user than to include '--use-conda' in the snakemake command.
 Some older systems might run into trouble with multiqc's latest versions. If multiqc specifically fails when running the pipeline then specifying that version 1.13 should be installed by replacing the line containing it in env_crescent.yaml with the following should solve the problem:
-`  - multiqc`
+`  - multiqc=1.13`
 
 If you intend to use CRESCENT via executors such as an HPC scheduler like slurm or lsf, you need to install the corresponding plugin as well:
 
