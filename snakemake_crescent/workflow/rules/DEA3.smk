@@ -52,7 +52,7 @@ rule count_matrix:
 # First check whether the logFC threshold is an integer
 # If so make it type int first so as to not have a .0 at the end of its string
 logFC_threshold = config["DEA"]["cutoffs"]["log2FC"]
-if logFC_threshold.is_integer():
+if logFC_threshold == int(logFC_threshold):
     logFC_threshold = int(logFC_threshold)
 DE_list = "_".join([not_control, 'VS', control, "".join(["DEGstable_padj", str(config["DEA"]["cutoffs"]["pADJ"]),"_logFC",  str(logFC_threshold), ".tsv"])])
 
