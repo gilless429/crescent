@@ -62,7 +62,8 @@ DGE_object_DEA <- estimateDisp(DGE_object_TMM, design)
 # Model fitting to count data
 fit <- glmQLFit(DGE_object_DEA, design)
 # Genewise hypothesis tests
-results <- glmQLFTest(fit) 
+coef_index <- which(colnames(design) == paste0("condition", not_control))
+results <- glmQLFTest(fit, coef = coef_index)
 # Overall results recovering
 dea_res <- topTags(results, n = Inf, adjust.method = "BH")
 # Output read counts (normalized TMM read counts)
