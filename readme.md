@@ -41,7 +41,7 @@ If you intend to use CRESCENT via executors such as an HPC scheduler like slurm 
 	Slurm: `conda install bioconda::snakemake-executor-plugin-slurm`
 	LSF: `conda install bioconda::snakemake-executor-plugin-lsf`
 	Kubernetes: `conda install bioconda::snakemake-executor-plugin-kubernetes`
-	Flux: `conda install bioconda::snakemake-executor-plugin-flux`
+	Flux: `pip install snakemake‑executor‑plugin‑flux`
 	DRMAA: `conda install bioconda::snakemake-executor-plugin-drmaa`
 
 Others can be found in the [snakemake documentation](https://snakemake.github.io/snakemake-plugin-catalog/index.html).
