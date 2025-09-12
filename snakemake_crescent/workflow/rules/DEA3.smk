@@ -36,6 +36,7 @@ rule count_matrix:
         rds = temp(DEA_quant_folder + "tximp.RDS" if salmon_map else [])
     threads: threads_per_rule
     params:
+        working_dir = WORKING_DIR,
         OUTPUT_DIR = OUTPUT_DIR,
         path = DEA_quant_folder,
         quantif = quantif_tool,  # method for merging read counts = quantification tool dependant
