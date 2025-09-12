@@ -114,7 +114,7 @@ python tx2gene.py annotations.gtf
 # Typical GFF3: transcripts in "ID", genes in "Parent"
 python tx2gene.py annotations.gff3 --tx-field ID --gene-field Parent
 # Custom annotation with nonstandard attribute names
-python make_tx2gene.py my.gff3 --tx-field transcript --gene-field gene
+python tx2gene.py my.gff3 --tx-field transcript --gene-field gene
 ```
 Options
 - `--tx-field` (default: transcript_id): the attribute name in the file that gives transcript IDs.
