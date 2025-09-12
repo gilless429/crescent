@@ -104,6 +104,26 @@ If using conda>=23.10.0 libmamba is not only built into conda but the default so
 
 When using executors such as an HPC scheduler, you will need to use its plugin and specify information such as the number of jobs that can be executed at once or the partition to use. I recommend looking through the documentation of your specific executor [here](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html).
 
+## Salmon for DEA
+
+When using salmon for differential expression analysis, CRESCENT does not yet automatically produce the file matching transcript ids to gene ids. If you intend to use CRESCENT for DEA and have salmon produce the read counts, use the provided script tx2gene.py on your annotation file from the command line (after having installed the CRESCENT conda environment) as follows :
+
+```bash
+# Typical GTF: transcripts in "transcript_id", genes in "gene_id" (defaults)
+python tx2gene.py annotations.gtf
+# Typical GFF3: transcripts in "ID", genes in "Parent"
+python tx2gene.py annotations.gff3 --tx-field ID --gene-field Parent
+# Custom annotation with nonstandard attribute names
+python make_tx2gene.py my.gff3 --tx-field transcript --gene-field gene
+```
+Options
+- `--tx-field` (default: transcript_id): the attribute name in the file that gives transcript IDs.
+- `--gene-field` (default: gene_id): the attribute name in the file that gives gene IDs.
+
+Defaults match the GTF standard (gene_id, transcript_id). For GFF3, use --tx-field ID --gene-field Parent.
+
+This produces a **`tx2gene.tsv`** file wherever the script was used from (which will overwrite any file with the same name already there). This file should then be placed inside your **WORKING_DIR**'s RNAseq folder so it can be found by CRESCENT.
+
 ## Outputs
 
 This lists all the outputs produced if the entire workflow is executed.
