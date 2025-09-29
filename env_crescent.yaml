@@ -2,11 +2,12 @@ name: crescent
 channels:
   - conda-forge
   - bioconda
+  - nodefaults
 dependencies:
   - python
   - icu
   # All r packages directly from r
-  - r-base
+  - r-base=4.4.*
   - r-devtools
   - r-biocmanager
   - r-data.table
