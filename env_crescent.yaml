@@ -2,7 +2,6 @@ name: crescent
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - python
   - icu
