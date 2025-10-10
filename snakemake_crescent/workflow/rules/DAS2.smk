@@ -34,7 +34,7 @@ rule rMATS:
         bam_dir = OUTPUT_DIR+"RNAseq/results/mapped/sorted/",
         output_dir = OUTPUT_DIR+"RNAseq/results/DAS/rMATS_output/",
         tmp_output_dir = OUTPUT_DIR+"RNAseq/results/DAS/tmp/",
-        stranded = 'fr-firststrand' if stranded == 1 or stranded == "yes" else 'fr-unstranded' if stranded == 0 or stranded == "no" else 'fr-secondstrand' if stranded == 2 or stranded == "reverse" else [],
+        stranded = 'fr-secondstrand' if stranded == 1 or stranded == "yes" else 'fr-unstranded' if stranded == 0 or stranded == "no" else 'fr-firststrand' if stranded == 2 or stranded == "reverse" else [],
         paired = 'paired' if paired_end else 'single',
         variable_length = '--variable-read-length' if config['DAS']['variable_read_length'] == 'yes' else []
     threads: threads_per_rule
