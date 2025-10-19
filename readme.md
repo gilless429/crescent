@@ -30,7 +30,7 @@ git clone https://github.com/gilless429/crescent.git
 ```
 
 The repository's basic structure is as follows :
-
+```
 crescent/
 ├── env_crescent.yaml
 ├── snakemake_crescent/
@@ -40,7 +40,7 @@ crescent/
 |    ├── refgen/
 │    └── RNAseq/
 ├── Test_data_results/ 
-
+```
 
 This project uses Conda for package management. All dependencies are listed in `env_crescent.yaml`, contained in the project’s main folder (crescent by default). To set up the environment, within the folder containing this file run:
 
