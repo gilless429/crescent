@@ -23,7 +23,26 @@ CRESCENT is a Snakemake workflow following a typical bioinformatic RNA-Seq analy
 
 CRESCENT is built to work on a Linux system. Many bioinformatic tools it uses are not available at all on Windows, and some libraries are not up to date enough to work on MacOS.
 
-This project uses Conda for package management. All dependencies are listed in `env_crescent.yaml`. To set up the environment, download the yaml and run:
+This repository contains crescent itself, a yaml to install its dependencies, and a small test dataset. To clone it to your system, run :
+
+```bash
+git clone https://github.com/gilless429/crescent.git
+```
+
+The repository's basic structure is as follows :
+
+crescent/
+├── env_crescent.yaml
+├── snakemake_crescent/
+|    ├── config/
+|    └── workflow/
+├── Test_data/
+|    ├── refgen/
+│    └── RNAseq/
+├── Test_data_results/ 
+
+
+This project uses Conda for package management. All dependencies are listed in `env_crescent.yaml`, contained in the project’s main folder (crescent by default). To set up the environment, within the folder containing this file run:
 
 ```bash
 conda env create -f env_crescent.yaml
@@ -50,7 +69,7 @@ Others can be found in the [snakemake documentation](https://snakemake.github.io
 
 ### Dataset and reference genome
 
-In this repository you will find the files required to run the pipeline (snakefile, rule modules, scripts, config file) under snakemake_crescent as well as a small test dataset under Test_data (along with its reference genome, transcriptome, and annotation which are all compressed as .gz and **need to be unzipped before use**).
+In this repository you will find the files required to run the pipeline (snakefile, rule modules, scripts, config file) under snakemake_crescent as well as a small test dataset under Test_data (along with its reference genome, transcriptome, and annotation which are all compressed as .gz and **need to be unzipped before use**). To do so, from CRESCENT's main folder (`crescent` by default) run : `gunzip Test_data/refgen/*gz`
 
 The config file provided, snakemake_crescent/config/config_crescent.yaml, is set up to work with the test data. Only the **WORKING_DIR and OUTPUT_DIR need to be changed**, providing the directory where both `RNAseq` and `refgen` folders are found as described below. The expected results are provided in Test_data_results.
 
@@ -70,13 +89,14 @@ Under `refgen/` your reference genome / transcriptome / annotation.
 After the analysis a new folder will appears in `RNAseq/` called results, though the output can be redirected to another folder than the working folder in which case a new RNAseq/results/ folder will be created there.
 
 Under results will be all result files of the CRESCENT pipeline. See [outputs](#Outputs) for details.
+
 ### Config file
 
-The config file under snakemake_crescent/config/ is where all parameters of the analysis are to be set.
+The config file under `snakemake_crescent/config/` is where all parameters of the analysis are to be set. Note that improper setup of the config file is the main source of errors when running CRESCENT.
 
 The main paramaters to consider before launch are :
-- the working directory (pointing to the folder containing `RNAseq/` and `refgen/` described above),
-- the output directory where an `RNAseq/results/` folder will be created to contain results. The output directory can be the same as the working directory, or another folder,
+- the working directory (pointing to the folder containing `RNAseq/` and `refgen/` described above). To use the test data, set as the working directory: `yourpath/crescent/Test_data/` where ‘yourpath’ is the absolute path to the crescent directory, 
+- the output directory where an `RNAseq/results/` folder will be created to contain results. The output directory can be the same as the working directory, or another folder. For a first attempt using the test data, set the same directory as the output directory: `yourpath/crescent/Test_data/` where ‘yourpath’ is the absolute path to the crescent directory,
 - the parameters defining which steps are to be executed (do_rawqc, do_trimming, do_DEA, do_DAS, do_DTU),
 - the parameters specific to the dataset being used such as input_mapped, paired_end, stranded, and everything under genome_and_annotation.
 
